@@ -32,7 +32,7 @@
           {
             opcode: 'booleanDropdown',
             blockType: Scratch.BlockType.BOOLEAN,
-            text: 'Booleans [booleanMenu]',
+            text: '[booleanMenu]',
             arguments: {
               
               booleanMenu:{
@@ -66,10 +66,29 @@
             arguments:{
 
                 INPUT:{
-                    type: Scratch.ArgumentType.NUMBER
+                    type: Scratch.ArgumentType.NUMBER,
+                    defaultValue: '10',
                 },
                 INPUT2:{
-                    type: Scratch.ArgumentType.NUMBER
+                    type: Scratch.ArgumentType.NUMBER,
+                    defaultValue: '100',
+                }
+            }
+          },
+          {
+            opcode: 'math',
+            blockType: Scratch.BlockType.REPORTER,
+            blockShape: Scratch.BlockShape.SQUARE,
+            text: 'Method [METHOD] argument(s) [NUMBERS]',
+            arguments:{
+
+                METHOD:{
+                    type: Scratch.ArgumentType.STRING,
+                    defaultValue: 'pow'
+                },
+                NUMBERS:{
+                    type: Scratch.ArgumentType.STRING,
+                    defaultValue: '5,2'
                 }
             }
           },
@@ -79,6 +98,11 @@
           booleanDropdownMenu: {
             acceptReporters: true,
             items: ["true", "false"]
+          },
+
+          mathDropdownMenu: {
+            
+
           }
         }
 
@@ -98,7 +122,13 @@
     }
 
     percentage(args) {
-        return args.INPUT / 100 * args.INPUT2
+      return args.INPUT / 100 * args.INPUT2
+    }
+
+    math(args) {
+      const method = args.METHOD
+      const numbers = args.NUMBERS.split(',').map(Number);
+      return Math[method](...numbers);
     }
 
   }

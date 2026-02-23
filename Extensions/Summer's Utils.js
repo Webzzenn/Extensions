@@ -11,15 +11,14 @@
         color3: '#f6e9ae',
         docsURI: 'https://example.com',
         blocks: [
-
+          // Booleans Section
           {
             blockType: Scratch.BlockType.LABEL,
             text: "Booleans"
           },
-
           {
-            opcode: 'booleanInpuit',
-             blockType: Scratch.BlockType.BOOLEAN,
+            opcode: 'booleanInput',
+            blockType: Scratch.BlockType.BOOLEAN,
             text: '[BOOLEAN]',
             disableMonitor: true,
             arguments: {
@@ -28,20 +27,17 @@
               }
             }
           },
-
           {
             opcode: 'booleanDropdown',
             blockType: Scratch.BlockType.BOOLEAN,
             text: '[booleanMenu]',
             arguments: {
-              
-              booleanMenu:{
+              booleanMenu: {
                 type: Scratch.ArgumentType.STRING,
                 menu: 'booleanDropdownMenu',
               }
             }
           },
-
           {
             opcode: 'flipBoolean',
             blockType: Scratch.BlockType.BOOLEAN,
@@ -54,25 +50,24 @@
             }
           },
 
+          // Math Section
           {
             blockType: Scratch.BlockType.LABEL,
             text: "Math"
           },
-
           {
             opcode: 'percentage',
             blockType: Scratch.BlockType.REPORTER,
             text: '[INPUT] % Of [INPUT2]',
-            arguments:{
-
-                INPUT:{
-                    type: Scratch.ArgumentType.NUMBER,
-                    defaultValue: '10',
-                },
-                INPUT2:{
-                    type: Scratch.ArgumentType.NUMBER,
-                    defaultValue: '100',
-                }
+            arguments: {
+              INPUT: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '10',
+              },
+              INPUT2: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '100',
+              }
             }
           },
           {
@@ -80,12 +75,11 @@
             blockType: Scratch.BlockType.REPORTER,
             blockShape: Scratch.BlockShape.SQUARE,
             text: 'Get Math Method [METHOD]',
-            arguments:{
-
-                METHOD:{
-                    type: Scratch.ArgumentType.STRING,
-                    defaultValue: 'PI'
-                },
+            arguments: {
+              METHOD: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: 'PI'
+              },
             }
           },
           {
@@ -93,23 +87,23 @@
             blockType: Scratch.BlockType.REPORTER,
             blockShape: Scratch.BlockShape.SQUARE,
             text: 'Math Method [METHOD] argument(s) [NUMBERS]',
-            arguments:{
-
-                METHOD:{
-                    type: Scratch.ArgumentType.STRING,
-                    defaultValue: 'pow'
-                },
-                NUMBERS:{
-                    type: Scratch.ArgumentType.STRING,
-                    defaultValue: '5,2'
-                },
+            arguments: {
+              METHOD: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: 'pow'
+              },
+              NUMBERS: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: '5,2'
+              },
             }
           },
-                    {
+
+          // Other Section
+          {
             blockType: Scratch.BlockType.LABEL,
             text: "Other"
           },
-
           {
             opcode: 'null',
             blockType: Scratch.BlockType.REPORTER,
@@ -117,7 +111,6 @@
             blockShape: Scratch.BlockShape.OCTAGONAL,
             text: "null"
           },
-
           {
             opcode: 'NaN',
             blockType: Scratch.BlockType.REPORTER,
@@ -125,7 +118,6 @@
             blockShape: Scratch.BlockShape.OCTAGONAL,
             text: "NaN"
           },
-
           {
             opcode: 'undefined',
             blockType: Scratch.BlockType.REPORTER,
@@ -133,7 +125,6 @@
             blockShape: Scratch.BlockShape.OCTAGONAL,
             text: "undefined"
           },
-          
           {
             opcode: 'Infinity',
             blockType: Scratch.BlockType.REPORTER,
@@ -150,70 +141,69 @@
           },
         ],
 
-        menus:{
+        menus: {
           booleanDropdownMenu: {
             acceptReporters: true,
             items: ["true", "false"]
           },
-
-          mathDropdownMenu: {
-            
-
-          }
+          mathDropdownMenu: {}
         }
-
       };
     }
 
+    // --- Implementations ---
+
     flipBoolean(args) {
-     return !args.BOOLEAN
+      return !args.BOOLEAN;
     }
 
-    booleanInpuit(args) {
-      return args.BOOLEAN
+    booleanInput(args) {
+      return args.BOOLEAN;
     }
 
     booleanDropdown(args) {
-      return args.booleanMenu
+      // Returns true if the string is "true", false otherwise
+      return args.booleanMenu === "true";
     }
 
     percentage(args) {
-      return args.INPUT / 100 * args.INPUT2
+      return (args.INPUT / 100) * args.INPUT2;
     }
 
     mathMethod(args) {
-      const method = args.METHOD
+      const method = args.METHOD;
       return Math[method];
-
     }
 
     mathMethodArgument(args) {
-      const method = args.METHOD
+      const method = args.METHOD;
       const numbers = args.NUMBERS.split(',').map(Number);
-      return Math[method](...numbers);
-
+      // Ensure the method exists and is a function before calling
+      if (typeof Math[method] === 'function') {
+        return Math[method](...numbers);
+      }
+      return 0;
     }
 
-    null(){
-      return "null"
+    null() {
+      return null;
     }
 
-    undefined(){
-      return "undefined"
+    undefined() {
+      return undefined;
     }
 
-    NaN(){
-      return "NaN"
+    NaN() {
+      return NaN;
     }
 
-    Infinity(){
-      return "Infinity"
+    Infinity() {
+      return Infinity;
     }
 
-    minusInfinity(){
-      return "-Infinity"
+    minusInfinity() {
+      return -Infinity;
     }
-
   }
 
   Scratch.extensions.register(new Extension());

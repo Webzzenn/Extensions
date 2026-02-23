@@ -76,10 +76,23 @@
             }
           },
           {
-            opcode: 'math',
+            opcode: 'mathMethod',
             blockType: Scratch.BlockType.REPORTER,
             blockShape: Scratch.BlockShape.SQUARE,
-            text: 'Method [METHOD] argument(s) [NUMBERS]',
+            text: 'Get Math Method [METHOD]',
+            arguments:{
+
+                METHOD:{
+                    type: Scratch.ArgumentType.STRING,
+                    defaultValue: 'PI'
+                },
+            }
+          },
+          {
+            opcode: 'mathMethodArgument',
+            blockType: Scratch.BlockType.REPORTER,
+            blockShape: Scratch.BlockShape.SQUARE,
+            text: 'Math Method [METHOD] argument(s) [NUMBERS]',
             arguments:{
 
                 METHOD:{
@@ -89,8 +102,51 @@
                 NUMBERS:{
                     type: Scratch.ArgumentType.STRING,
                     defaultValue: '5,2'
-                }
+                },
             }
+          },
+                    {
+            blockType: Scratch.BlockType.LABEL,
+            text: "Other"
+          },
+
+          {
+            opcode: 'null',
+            blockType: Scratch.BlockType.REPORTER,
+            disableMonitor: true,
+            blockShape: Scratch.BlockShape.OCTAGONAL,
+            text: "null"
+          },
+
+          {
+            opcode: 'NaN',
+            blockType: Scratch.BlockType.REPORTER,
+            disableMonitor: true,
+            blockShape: Scratch.BlockShape.OCTAGONAL,
+            text: "NaN"
+          },
+
+          {
+            opcode: 'undefined',
+            blockType: Scratch.BlockType.REPORTER,
+            disableMonitor: true,
+            blockShape: Scratch.BlockShape.OCTAGONAL,
+            text: "undefined"
+          },
+          
+          {
+            opcode: 'Infinity',
+            blockType: Scratch.BlockType.REPORTER,
+            disableMonitor: true,
+            blockShape: Scratch.BlockShape.OCTAGONAL,
+            text: "Infinity"
+          },
+          {
+            opcode: 'minusInfinity',
+            blockType: Scratch.BlockType.REPORTER,
+            disableMonitor: true,
+            blockShape: Scratch.BlockShape.OCTAGONAL,
+            text: "-Infinity"
           },
         ],
 
@@ -125,10 +181,37 @@
       return args.INPUT / 100 * args.INPUT2
     }
 
-    math(args) {
+    mathMethod(args) {
+      const method = args.METHOD
+      return Math[method];
+
+    }
+
+    mathMethodArgument(args) {
       const method = args.METHOD
       const numbers = args.NUMBERS.split(',').map(Number);
       return Math[method](...numbers);
+
+    }
+
+    null(){
+      return "null"
+    }
+
+    undefined(){
+      return "undefined"
+    }
+
+    NaN(){
+      return "NaN"
+    }
+
+    Infinity(){
+      return "Infinity"
+    }
+
+    minusInfinity(){
+      return "-Infinity"
     }
 
   }

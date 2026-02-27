@@ -61,7 +61,7 @@
             }
           },
 
-         {
+          {
             blockType: Scratch.BlockType.LABEL,
             text: 'Builder'
           },

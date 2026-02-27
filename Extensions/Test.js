@@ -12,7 +12,7 @@
         blocks: [
           {
             opcode: 'branch',
-            blockType: Scratch.BlockType.COMMAND,
+            blockType: Scratch.BlockType.CONDITIONAL,
             disableMonitor: true,
             text: "my test branch",
             branchCount: 1,
@@ -23,6 +23,7 @@
 
     branch(argsm, util) {
       util.startBranch(1, false);
+      return "hi"
     }
   }
 

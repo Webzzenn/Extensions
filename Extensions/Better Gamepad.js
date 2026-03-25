@@ -76,6 +76,9 @@ const Scratch = new ExtensionApi(true);
       return {
         id: 'Gamepad',
         name: 'Gamepad',
+        color1: '#3e72ec',
+        color2: '#377cb2',
+        color3: '#1846b2',
         blocks: [
           {
             opcode: 'gamepadConnected',

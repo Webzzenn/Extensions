@@ -145,8 +145,8 @@
         id: "SummerDebugger",
         name: "Debugger",
         color1: '#FF7A2F',
-        color2: '#FF7A2F',
-        color3: '#FF7A2F',
+        color2: '#fd9b61',
+        color3: '#ffc29f',
         blocks: [
           {
             opcode: "log",
@@ -167,7 +167,7 @@
               TEXT: { type: Scratch.ArgumentType.STRING, defaultValue: "text" },
               COLOR: {
                 type: Scratch.ArgumentType.COLOR,
-                defaultValue: "#FF0000",
+                defaultValue: "#f76565",
               },
             },
           },

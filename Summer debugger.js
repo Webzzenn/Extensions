@@ -68,6 +68,19 @@
       <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
     </svg>`;
 
+  // Debounce utility
+  const debounce = (func, wait) => {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  };
+
   class DebuggerExtensionTS {
     runtime = Scratch.vm.runtime;
 
@@ -111,6 +124,14 @@
     variableSearchQuery = "";
 
     packaged = typeof scaffolding !== "undefined";
+
+    // Optimization: track current visible range for variables
+    currentVariableRange = { start: -1, end: -1 };
+    
+    // Optimization: dirty flags for render loop
+    needsProfilerUpdate = false;
+    needsThreadUpdate = false;
+    needsVariableUpdate = false;
 
     constructor() {
       this.fpsHistory = new Array(this.historyLength).fill(0);
@@ -215,39 +236,38 @@
     }
 
     ToggleDebugger(args) {
-  if (this.debuggerWindow) {
-    if (args.BOOLEAN) {
-      this.debuggerWindow.style.display = "flex";
-      this.debuggerWindow.style.opacity = "0";
-      this.debuggerWindow.style.transform = "scale(0.95)";
-      this.debuggerWindow.style.transition = "all 0.2s ease-out";
-      
-      // Force reflow so the starting values are applied before the transition
-      this.debuggerWindow.offsetHeight; 
-      
-      this.debuggerWindow.style.opacity = "1";
-      this.debuggerWindow.style.transform = "scale(1)";
-      
-      setTimeout(() => {
-        this.debuggerWindow.style.transition = "";
-      }, 200);
-      
-    } else { // <-- Added curly brace here
-      
-      this.debuggerWindow.style.pointerEvents = "none";
-      this.debuggerWindow.style.opacity = "0";
-      this.debuggerWindow.style.transform = "scale(0.95)";
-      this.debuggerWindow.style.transition = "all 0.2s ease-in-out";
-      
-      setTimeout(() => {
-        this.debuggerWindow.style.display = "none";
-        this.debuggerWindow.style.pointerEvents = "";
-        this.debuggerWindow.style.transition = "";
-      }, 200);
-      
-    } // <-- Added closing curly brace here
-  }
-}
+      if (this.debuggerWindow) {
+        if (args.BOOLEAN) {
+          this.debuggerWindow.style.display = "flex";
+          this.debuggerWindow.style.opacity = "0";
+          this.debuggerWindow.style.transform = "scale(0.95)";
+          this.debuggerWindow.style.transition = "all 0.2s ease-out";
+          
+          this.debuggerWindow.offsetHeight; 
+          
+          this.debuggerWindow.style.opacity = "1";
+          this.debuggerWindow.style.transform = "scale(1)";
+          
+          setTimeout(() => {
+            this.debuggerWindow.style.transition = "";
+          }, 200);
+          
+        } else {
+          
+          this.debuggerWindow.style.pointerEvents = "none";
+          this.debuggerWindow.style.opacity = "0";
+          this.debuggerWindow.style.transform = "scale(0.95)";
+          this.debuggerWindow.style.transition = "all 0.2s ease-in-out";
+          
+          setTimeout(() => {
+            this.debuggerWindow.style.display = "none";
+            this.debuggerWindow.style.pointerEvents = "";
+            this.debuggerWindow.style.transition = "";
+          }, 200);
+          
+        }
+      }
+    }
 
     _createWindow() {
       const checkAndAddButton = () => {
@@ -268,9 +288,9 @@
           `;
           buttonContainer.addEventListener("click", () => {
             if (this.debuggerWindow.style.display === "none") {
-              this.ToggleDebugger({BOOLEAN:true})
+              this.ToggleDebugger({ BOOLEAN: true })
             } else {
-              this.ToggleDebugger({BOOLEAN:false})
+              this.ToggleDebugger({ BOOLEAN: false })
             }
           });
           container.insertBefore(buttonContainer, container.firstChild);
@@ -309,9 +329,13 @@
         boxShadow: "0px 5px 25px 5px hsla(0, 0%, 0%, 0.15)",
       });
 
-      const resizeObserver = new ResizeObserver(() => {
+      // Optimization: debounce resize observer
+      const debouncedResize = debounce(() => {
         this._updateVirtualScroll();
-      });
+        this.needsVariableUpdate = true;
+      }, 100);
+
+      const resizeObserver = new ResizeObserver(debouncedResize);
       resizeObserver.observe(w);
 
       const header = document.createElement("div");
@@ -345,7 +369,7 @@
       });
       closeButton.title = "Close Debugger";
       closeButton.addEventListener("click", () => {
-        this.ToggleDebugger(false);
+        this.ToggleDebugger({ BOOLEAN: false });
       });
 
       header.appendChild(closeButton);
@@ -564,9 +588,15 @@
         fontSize: "11px",
       });
       varsSearchInput.placeholder = "Search variables...";
+      
+      // Optimization: debounce search input
+      const debouncedSearch = debounce((value) => {
+        this.variableSearchQuery = value;
+        this.needsVariableUpdate = true;
+      }, 150);
+      
       varsSearchInput.addEventListener("input", (e) => {
-        this.variableSearchQuery = e.target.value;
-        this._updateVariablesViewer();
+        debouncedSearch(e.target.value);
       });
 
       varsSearchContainer.appendChild(varsSearchInput);
@@ -579,6 +609,14 @@
         overflowX: "hidden",
         padding: "8px",
       });
+      
+      // Optimization: debounce variable scroll handler
+      const debouncedVarScroll = debounce(() => {
+        this.needsVariableUpdate = true;
+      }, 50);
+      
+      this.variablesTableContainer.addEventListener("scroll", debouncedVarScroll);
+      
       this.variablesContentArea.appendChild(this.variablesTableContainer);
 
       const threadControls = document.createElement("div");
@@ -706,18 +744,17 @@
           case "profiler":
             profilerTabButton.style.borderBottom = `2px solid ${ACCENT_COLOR}`;
             this.profilerContentArea.style.display = "block";
-            this._resizeAllCanvases();
-            this._renderAllGraphs();
+            this.needsProfilerUpdate = true;
             break;
           case "threads":
             threadsTabButton.style.borderBottom = `2px solid ${ACCENT_COLOR}`;
             this.threadContentArea.style.display = "block";
-            this._updateThreadViewer();
+            this.needsThreadUpdate = true;
             break;
           case "variables":
             runtimeVarsTabButton.style.borderBottom = `2px solid ${ACCENT_COLOR}`;
             this.variablesContentArea.style.display = "flex";
-            this._updateVariablesViewer();
+            this.needsVariableUpdate = true;
             break;
         }
       };
@@ -770,7 +807,7 @@
       );
 
       requestAnimationFrame(() => this._renderLoop());
-      this.ToggleDebugger(false);
+      this.ToggleDebugger({ BOOLEAN: false });
     }
 
     _constrainWindowToBounds(el) {
@@ -920,6 +957,11 @@
         this.stampsPerFrameHistory[this.writeIndex] = stampsPerFrameCount;
         this.writeIndex = (this.writeIndex + 1) % this.historyLength;
         this.lastSampleTime = now;
+        
+        // Mark profiler as needing update if visible
+        if (this.profilerContentArea && this.profilerContentArea.style.display !== "none") {
+          this.needsProfilerUpdate = true;
+        }
       }
     }
 
@@ -1022,26 +1064,33 @@
     }
 
     _renderLoop() {
+      // Optimization: only update what's visible and needed
       if (
         this.profilerContentArea &&
-        this.profilerContentArea.style.display !== "none"
+        this.profilerContentArea.style.display !== "none" &&
+        this.needsProfilerUpdate
       ) {
         this._resizeAllCanvases();
         this._renderAllGraphs();
+        this.needsProfilerUpdate = false;
       }
 
       if (
         this.threadContentArea &&
-        this.threadContentArea.style.display !== "none"
+        this.threadContentArea.style.display !== "none" &&
+        this.needsThreadUpdate
       ) {
         this._updateThreadViewer();
+        this.needsThreadUpdate = false;
       }
 
       if (
         this.variablesContentArea &&
-        this.variablesContentArea.style.display !== "none"
+        this.variablesContentArea.style.display !== "none" &&
+        this.needsVariableUpdate
       ) {
         this._updateVariablesViewer();
+        this.needsVariableUpdate = false;
       }
 
       if (this.logContentArea && this.logContentArea.style.display !== "none") {
@@ -1051,6 +1100,7 @@
       } else if (this.scrollToBottomButton) {
         this.scrollToBottomButton.style.display = "none";
       }
+      
       requestAnimationFrame(() => this._renderLoop());
     }
 
@@ -1139,6 +1189,7 @@
 
       if (this.variablesOld !== structureString) {
         this.variablesOld = structureString;
+        this.currentVariableRange = { start: startIndex, end: endIndex };
 
         container.innerHTML = "";
         const table = document.createElement("table");
@@ -1233,90 +1284,17 @@
 
         container.appendChild(table);
       } else {
-        this._syncVariableInputs(filteredEntries);
+        // Optimization: Only sync visible entries
+        this._syncVariableInputs(filteredEntries, startIndex, endIndex);
       }
     }
 
-    _renderVariableTable(entries) {
-      this.variablesTableContainer.innerHTML = "";
-      const table = document.createElement("table");
-      Object.assign(table.style, {
-        width: "100%",
-        borderCollapse: "collapse",
-        fontSize: "12px",
-        tableLayout: "fixed",
-      });
-
-      entries.forEach((entry, index) => {
-        if (
-          this.variableSearchQuery &&
-          !entry.key
-            .toLowerCase()
-            .includes(this.variableSearchQuery.toLowerCase())
-        )
-          return;
-
-        const row = document.createElement("tr");
-        row.style.background =
-          index % 2 === 0 ? "transparent" : "rgba(0,0,0,0.03)";
-        row.style.borderBottom =
-          "1px solid var(--ui-black-transparent, rgba(0,0,0,0.1))";
-
-        const keyCell = document.createElement("td");
-        keyCell.textContent = entry.key;
-        Object.assign(keyCell.style, {
-          paddingLeft: "8px",
-          fontWeight: "bold",
-          width: "40%",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          textAlign: "left",
-          borderRight: "1px solid var(--ui-black-transparent, rgba(0,0,0,0.1))",
-        });
-
-        const valCell = document.createElement("td");
-        Object.assign(valCell.style, {
-          paddingLeft: "8px",
-          whiteSpace: "pre-wrap",
-          wordBreak: "break-word",
-          textAlign: "left",
-        });
-
-        const input = document.createElement("input");
-        input.dataset.varId = entry.id;
-        Object.assign(input.style, {
-          width: "100%",
-          background: "transparent",
-          border: "none",
-          color: "var(--text-primary, hsla(225, 15%, 40%, 1))",
-          outline: "none",
-          fontFamily: "monospace",
-          padding: "6px",
-        });
-
-        input.value = entry.value;
-
-        input.addEventListener("change", (e) => {
-          let val = e.target.value;
-          if (val !== "" && !isNaN(val)) val = Number(val);
-
-          if (entry.ref.type === "runtime") {
-            this.runtime.variables[entry.ref.key] = val;
-          } else {
-            entry.ref.value = val;
-          }
-        });
-
-        valCell.appendChild(input);
-        row.appendChild(keyCell);
-        row.appendChild(valCell);
-        table.appendChild(row);
-      });
-      this.variablesTableContainer.appendChild(table);
-    }
-
-    _syncVariableInputs(entries) {
-      entries.forEach((entry) => {
+    // Optimized: Only update visible variable inputs
+    _syncVariableInputs(entries, startIndex, endIndex) {
+      for (let i = startIndex; i < endIndex; i++) {
+        const entry = entries[i];
+        if (!entry) continue;
+        
         const input = this.variablesTableContainer.querySelector(
           `input[data-var-id="${entry.id}"]`,
         );
@@ -1325,8 +1303,9 @@
             input.value = entry.value;
           }
         }
-      });
+      }
     }
+
     _updateThreadViewer(forceUpdate) {
       if (
         !this.threadContentArea ||
@@ -1758,10 +1737,12 @@
           container.appendChild(messageDiv);
         }
       }
+      
+      // Mark as no longer needing update
+      this.needsThreadUpdate = false;
     }
+
     log({ TEXT }) {
-      // Coerce to string so non-string values (numbers, booleans, etc.)
-      // don't cause "text.replace is not a function" errors.
       const entry = { text: String(TEXT == null ? "" : TEXT) };
 
       this.logEntries.push(entry);
@@ -1774,7 +1755,6 @@
     }
 
     _formatLogItem(text) {
-      // Guard: ensure we always have a string before calling .replace()
       if (text == null) return "";
       text = String(text);
       if (!text) return "";
@@ -1924,32 +1904,6 @@ ${logHTML}
           10;
       this.userScrolledUp = !isAtBottom;
       this._updateVirtualScroll();
-    }
-
-    _drag(header, el) {
-      let x = 0,
-        y = 0;
-      header.onmousedown = (e) => {
-        const r = el.getBoundingClientRect();
-        x = e.clientX - r.left;
-        y = e.clientY - r.top;
-        document.onmousemove = (e2) => {
-          el.style.left =
-            Math.max(
-              0,
-              Math.min(e2.clientX - x, window.innerWidth - el.offsetWidth),
-            ) + "px";
-          el.style.top =
-            Math.max(
-              0,
-              Math.min(e2.clientY - y, window.innerHeight - el.offsetHeight),
-            ) + "px";
-        };
-        document.onmouseup = () => {
-          document.onmousemove = null;
-          document.onmouseup = null;
-        };
-      };
     }
   }
 

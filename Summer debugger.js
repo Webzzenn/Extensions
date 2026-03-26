@@ -215,8 +215,8 @@
     }
 
     ToggleDebugger(args) {
-      if(this.debuggerWindow) {
-      if (args.BOOLEAN)
+      if(this.debuggerWindow){
+      if (args.BOOLEAN){
       this.debuggerWindow.style.display = "flex";
         this.debuggerWindow.style.opacity = "0";
         this.debuggerWindow.style.transform = "scale(0.95)";
@@ -227,7 +227,8 @@
         setTimeout(() => {
           this.debuggerWindow.style.transition = "";
         }, 200);
-      then
+      }
+      else
         this.debuggerWindow.style.pointerEvents = "none";
         this.debuggerWindow.style.opacity = "0";
         this.debuggerWindow.style.transform = "scale(0.95)";

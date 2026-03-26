@@ -268,9 +268,9 @@
           `;
           buttonContainer.addEventListener("click", () => {
             if (this.debuggerWindow.style.display === "none") {
-              this.ToggleDebugger(true);
+              this.ToggleDebugger(true)
             } else {
-              this.ToggleDebugger(false);
+              this.ToggleDebugger(false)
             }
           });
           container.insertBefore(buttonContainer, container.firstChild);

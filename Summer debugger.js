@@ -259,9 +259,9 @@
           `;
           buttonContainer.addEventListener("click", () => {
             if (this.debuggerWindow.style.display === "none") {
-              this.showDebugger();
+              this.ToggleVisibility(true);
             } else {
-              this.hideDebugger();
+              this.ToggleVisibility(false);
             }
           });
           container.insertBefore(buttonContainer, container.firstChild);
@@ -336,7 +336,7 @@
       });
       closeButton.title = "Close Debugger";
       closeButton.addEventListener("click", () => {
-        this.hideDebugger();
+        this.ToggleVisibility(false);
       });
 
       header.appendChild(closeButton);
@@ -761,7 +761,7 @@
       );
 
       requestAnimationFrame(() => this._renderLoop());
-      this.hideDebugger();
+      this.ToggleVisibility(false);
     }
 
     _constrainWindowToBounds(el) {

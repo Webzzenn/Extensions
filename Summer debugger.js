@@ -197,24 +197,37 @@
           },
           "---",
           {
-            opcode: "showDebugger",
+            opcode: "ToggleDebugger",
             blockType: Scratch.BlockType.COMMAND,
-            text: "show debugger",
+            text: 'visibility[BOOLEAN]',
+            arguments: {
+              BOOLEAN: {
+                type: Scratch.ArgumentType.BOOLEAN,
+              }
+            }
           },
-          {
-            opcode: "hideDebugger",
-            blockType: Scratch.BlockType.COMMAND,
-            text: "hide debugger",
-          },
-        ],
+        ]
       };
     }
 
     coloredText({ TEXT, COLOR }) {
       return `${COLOR_TOKEN_PREFIX}${COLOR}${COLOR_TOKEN_SUFFIX}${TEXT}${COLOR_TOKEN_END}`;
     }
-    hideDebugger() {
-      if (this.debuggerWindow) {
+
+    ToggleVisibility(args) {
+      if(this.debuggerWindow) {
+      if (args.BOOLEAN)
+      this.debuggerWindow.style.display = "flex";
+        this.debuggerWindow.style.opacity = "0";
+        this.debuggerWindow.style.transform = "scale(0.95)";
+        this.debuggerWindow.style.transition = "all 0.2s ease-out";
+        this.debuggerWindow.offsetHeight;
+        this.debuggerWindow.style.opacity = "1";
+        this.debuggerWindow.style.transform = "scale(1)";
+        setTimeout(() => {
+          this.debuggerWindow.style.transition = "";
+        }, 200);
+      then
         this.debuggerWindow.style.pointerEvents = "none";
         this.debuggerWindow.style.opacity = "0";
         this.debuggerWindow.style.transform = "scale(0.95)";
@@ -227,20 +240,6 @@
       }
     }
 
-    showDebugger() {
-      if (this.debuggerWindow) {
-        this.debuggerWindow.style.display = "flex";
-        this.debuggerWindow.style.opacity = "0";
-        this.debuggerWindow.style.transform = "scale(0.95)";
-        this.debuggerWindow.style.transition = "all 0.2s ease-out";
-        this.debuggerWindow.offsetHeight;
-        this.debuggerWindow.style.opacity = "1";
-        this.debuggerWindow.style.transform = "scale(1)";
-        setTimeout(() => {
-          this.debuggerWindow.style.transition = "";
-        }, 200);
-      }
-    }
     _createWindow() {
       const checkAndAddButton = () => {
         const container = document.querySelector(

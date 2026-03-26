@@ -142,8 +142,11 @@
 
     getInfo() {
       return {
-        id: "DebuggerExtensionTS",
+        id: "SummerDebugger",
         name: "Debugger",
+        color1: '#FF7A2F',
+        color2: '#FF7A2F',
+        color3: '#FF7A2F',
         blocks: [
           {
             opcode: "log",

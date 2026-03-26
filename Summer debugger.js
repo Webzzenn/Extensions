@@ -214,7 +214,7 @@
       return `${COLOR_TOKEN_PREFIX}${COLOR}${COLOR_TOKEN_SUFFIX}${TEXT}${COLOR_TOKEN_END}`;
     }
 
-    ToggleVisibility(args) {
+    ToggleDebugger(args) {
       if(this.debuggerWindow) {
       if (args.BOOLEAN)
       this.debuggerWindow.style.display = "flex";
@@ -259,9 +259,9 @@
           `;
           buttonContainer.addEventListener("click", () => {
             if (this.debuggerWindow.style.display === "none") {
-              this.ToggleVisibility(true);
+              this.ToggleDebugger(true);
             } else {
-              this.ToggleVisibility(false);
+              this.ToggleDebugger(false);
             }
           });
           container.insertBefore(buttonContainer, container.firstChild);
@@ -336,7 +336,7 @@
       });
       closeButton.title = "Close Debugger";
       closeButton.addEventListener("click", () => {
-        this.ToggleVisibility(false);
+        this.ToggleDebugger(false);
       });
 
       header.appendChild(closeButton);
@@ -761,7 +761,7 @@
       );
 
       requestAnimationFrame(() => this._renderLoop());
-      this.ToggleVisibility(false);
+      this.ToggleDebugger(false);
     }
 
     _constrainWindowToBounds(el) {
